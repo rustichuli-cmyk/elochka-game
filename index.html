@@ -14,7 +14,7 @@
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh; overflow: hidden; user-select: none;
         }
-        /* Анимация падающего снега */
+        /* Падающий снег */
         .snowflake {
             position: absolute; top: -10px; color: #fff; font-size: 1em;
             pointer-events: none; animation: fall linear infinite; z-index: 1;
@@ -27,7 +27,7 @@
             width: 100%; max-width: 450px; z-index: 10;
             display: flex; flex-direction: column; align-items: center; padding: 15px; box-sizing: border-box;
         }
-        /* Экономическая панель ВК */
+        /* Панель ресурсов */
         .resources-panel {
             display: flex; justify-content: space-around; width: 100%;
             background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 20px;
@@ -36,7 +36,7 @@
         .res-item { display: flex; align-items: center; font-weight: bold; font-size: 16px; }
         .res-icon { font-size: 20px; margin-right: 5px; }
 
-        /* Игровая поляна */
+        /* Поляна */
         .playfield {
             position: relative; width: 100%; height: 320px; margin: 20px 0;
             background: #2c3e50 linear-gradient(to bottom, #34495e, #2c3e50);
@@ -45,7 +45,7 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.6);
             overflow: hidden;
         }
-        /* Графика ёлочки на основе Emoji со спецэффектами */
+        /* Ёлочка со спецэффектами */
         .tree-display {
             font-size: 140px;
             cursor: pointer;
@@ -55,7 +55,7 @@
         }
         .tree-display:active { transform: scale(1.15); }
 
-        /* Кнопки улучшения */
+        /* Кнопки */
         .upgrade-section { width: 100%; text-align: center; }
         .lvl-badge { background: #e63946; padding: 5px 15px; border-radius: 15px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
         .main-btn {
@@ -65,7 +65,7 @@
         }
         .main-btn:hover { background: #264653; }
         
-        /* Вкладки как в меню ВК */
+        /* Меню ВК */
         .nav-menu { display: flex; width: 100%; background: rgba(255,255,255,0.1); border-radius: 15px; margin-top: auto; margin-bottom: 10px; }
         .nav-item { flex: 1; text-align: center; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer; color: #ccc; }
         .nav-item.active { color: #fff; background: rgba(255,255,255,0.15); border-radius: 15px; }
@@ -74,26 +74,22 @@
 <body>
 
 <div class="game-container">
-    <!-- Верхняя панель ресурсов -->
     <div class="resources-panel">
         <div class="res-item"><span class="res-icon">🪙</span> <span id="coins-txt">0</span></div>
-        <div class="res-item"><span class="res-icon">🪄</span> <span id="sticks-txt">10</span></div>
+        <div class="res-item"><span class="res-icon">🪄</span> <span id="sticks-txt">20</span></div>
         <div class="res-item"><span class="res-icon">💎</span> <span>5</span></div>
     </div>
 
-    <!-- Поляна с Ёлкой -->
     <div class="playfield">
-        <div id="main-tree" class="tree-display" onclick="upgradeTree()">🌱</div>
+        <div id="main-tree" class="tree-display" onclick="upgradeTree()">🪵</div>
     </div>
 
-    <!-- Управление -->
     <div class="upgrade-section">
-        <div class="lvl-badge">Уровень Поляны: <span id="lvl-txt">1</span></div>
+        <div class="lvl-badge">Уровень Ёлки: <span id="lvl-txt">1</span></div>
         <button class="main-btn" onclick="upgradeTree()">Вулкан Магии (-2 🪄)</button>
         <p style="font-size: 12px; color: #a9d6e5; margin-top: 5px;">Монеты капают автоматически: +1/сек</p>
     </div>
 
-    <!-- Меню -->
     <div class="nav-menu">
         <div class="nav-item active">🎄 Поляна</div>
         <div class="nav-item" onclick="alert('Рейтинг будет доступен после запуска сервера!')">🏆 Топ-100</div>
@@ -105,21 +101,21 @@
     const tg = window.Telegram.WebApp;
     if (tg) tg.expand();
 
-    // Баланс игры
     let coins = 0;
-    let sticks = 10;
+    let sticks = 20; // Увеличил запас палочек на старте для тестов
     let level = 1;
 
-    // Стадии роста в зависимости от уровня
-    function getTreeEmoji(lvl) {
-        if (lvl <= 2) return "🌱";      // Начальный росток
-        if (lvl <= 4) return "🌿";      // Кустик
-        if (lvl <= 6) return "🌲";      // Молодая ель
-        if (lvl <= 8) return "🎄";      // Нарядная ёлочка
-        return "🌟🎄🌟";                // Легендарный уровень!
-    }
+    // Четкие пошаговые стадии роста для каждого клика
+    const treeStages = {
+        1: "🪵", // Просто пустой горшок / земля
+        2: "🌱", // Маленький росток
+        3: "🌿", // Большой кустик
+        4: "🌲", // Дикая ёлочка
+        5: "🎄", // Наряженное новогоднее дерево
+        6: "🎁🎄", // Ёлка с подарками под ней
+        7: "🌟🎄🎁" // Легендарная супер-ёлка со звездой!
+    };
 
-    // Автоматический сбор монет (пассивный доход поляны)
     setInterval(() => {
         coins += level;
         document.getElementById('coins-txt').innerText = coins;
@@ -127,27 +123,23 @@
 
     function upgradeTree() {
         if (sticks < 2) {
-            if (tg && tg.showAlert) {
-                tg.showAlert("🪄 Не хватает волшебных палочек!");
-            } else {
-                alert("🪄 Не хватает волшебных палочек!");
-            }
+            if (tg && tg.showAlert) tg.showAlert("🪄 Палочки закончились!");
+            else alert("🪄 Палочки закончились!");
             return;
         }
         sticks -= 2;
         level++;
 
-        if (tg && tg.HapticFeedback) {
-            tg.HapticFeedback.notificationOccurred('success'); // Вибрация на телефоне
-        }
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         
-        // Обновляем графику и тексты
-        document.getElementById('main-tree').innerText = getTreeEmoji(level);
+        // Меняем смайлик. Если уровень больше 7, оставляем финальную стадию
+        const currentEmoji = treeStages[level] || "🌟🎄🎁";
+        
+        document.getElementById('main-tree').innerText = currentEmoji;
         document.getElementById('sticks-txt').innerText = sticks;
         document.getElementById('lvl-txt').innerText = level;
     }
 
-    // Генератор снега на экране
     function createSnow() {
         const flake = document.createElement('div');
         flake.classList.add('snowflake');
