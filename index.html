@@ -3,256 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ёлочка: Telegram Mini App</title>
-    <!-- Подключаем официальный скрипт Telegram -->
+    <title>Ёлочка: Зимняя Поляна</title>
     <script src="https://telegram.org"></script>
     <style>
-        :root {
-            --tg-theme-bg-color: #17212b;
-            --tg-theme-text-color: #f5f5f5;
-            --tg-theme-button-color: #2481cc;
-            --tg-theme-button-text-color: #ffffff;
-            --tg-theme-hint-color: #708499;
-        }
         body {
-            background-color: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            user-select: none;
+            margin: 0; padding: 0;
+            background: #0d1b2a linear-gradient(to bottom, #0d1b2a, #1b263b);
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; overflow: hidden; user-select: none;
         }
-        .container {
-            width: 100%;
-            max-width: 450px;
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        /* Анимация падающего снега */
+        .snowflake {
+            position: absolute; top: -10px; color: #fff; font-size: 1em;
+            pointer-events: none; animation: fall linear infinite; z-index: 1;
         }
-        /* Вкладки сверху */
-        .tabs {
-            display: flex;
-            width: 100%;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        .tab-btn {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--tg-theme-hint-color);
-            padding: 12px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .tab-btn.active {
-            background: rgba(255,255,255,0.1);
-            color: var(--tg-theme-text-color);
-            border-bottom: 3px solid var(--tg-theme-button-color);
-        }
-        .screen { display: none; width: 100%; text-align: center; }
-        .screen.active { display: block; }
-
-        /* Экран Ёлки */
-        .tree-container {
-            font-size: 120px;
-            margin: 30px 0;
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
-        .tree-container:active { transform: scale(1.1); }
-        .stats-box {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 15px;
-            width: 90%;
-            margin-bottom: 20px;
-        }
-        .progress-bar {
-            background: #2c3e50;
-            height: 14px;
-            width: 100%;
-            border-radius: 7px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-        .progress-fill {
-            background: #2ecc71;
-            width: 0%;
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-        .action-btn {
-            background-color: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            border: none;
-            padding: 15px 40px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 25px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            width: 80%;
+        @keyframes fall {
+            to { transform: translateY(105vh) translateX(20px); }
         }
         
-        /* Стили для Топа и Друзей */
-        .list-item {
-            display: flex;
-            justify-content: space-between;
-            background: rgba(255,255,255,0.05);
-            padding: 12px 15px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            align-items: center;
+        .game-container {
+            width: 100%; max-width: 450px; z-index: 10;
+            display: flex; flex-direction: column; align-items: center; padding: 15px; box-sizing: border-box;
         }
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            width: 100%;
+        /* Экономическая панель как в ВК */
+        .resources-panel {
+            display: flex; justify-content: space-around; width: 100%;
+            background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 20px;
+            backdrop-filter: blur(5px); box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        .input-field {
-            flex: 1;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.2);
-            color: white;
-            font-size: 16px;
+        .res-item { display: flex; align-items: center; font-weight: bold; font-size: 16px; }
+        .res-icon { font-size: 20px; margin-right: 5px; }
+
+        /* Игровая поляна */
+        .playfield {
+            position: relative; width: 100%; height: 320px; margin: 20px 0;
+            background: url('https://unsplash.com') center/cover;
+            border-radius: 25px; border: 3px solid #415a77;
+            display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
         }
-        .sm-btn {
-            background: var(--tg-theme-button-color);
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-weight: bold;
+        .tree-img {
+            width: 180px; height: auto; bottom: 20px; position: absolute;
+            transition: transform 0.1s ease-in-out; cursor: pointer;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.7));
         }
+        .tree-img:active { transform: scale(1.08); }
+
+        /* Кнопки улучшения */
+        .upgrade-section { width: 100%; text-align: center; }
+        .lvl-badge { background: #e63946; padding: 5px 15px; border-radius: 15px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+        .main-btn {
+            background: #2a9d8f; color: white; border: none; width: 85%;
+            padding: 15px; font-size: 18px; font-weight: bold; border-radius: 30px;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(42, 157, 143, 0.4); transition: 0.2s;
+        }
+        .main-btn:hover { background: #264653; }
+        
+        /* Вкладки как в меню ВК */
+        .nav-menu { display: flex; width: 100%; background: rgba(255,255,255,0.1); border-radius: 15px; margin-top: auto; margin-bottom: 10px; }
+        .nav-item { flex: 1; text-align: center; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer; color: #ccc; }
+        .nav-item.active { color: #fff; background: rgba(255,255,255,0.15); border-radius: 15px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- Навигация -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchScreen('tree-screen', this)">🎄 Ёлка</button>
-        <button class="tab-btn" onclick="switchScreen('top-screen', this)">🏆 Топ-100</button>
-        <button class="tab-btn" onclick="switchScreen('friends-screen', this)">👥 Друзья</button>
+<div class="game-container">
+    <!-- Верхняя панель ресурсов -->
+    <div class="resources-panel">
+        <div class="res-item"><span class="res-icon">🪙</span> <span id="coins-txt">0</span></div>
+        <div class="res-item"><span class="res-icon">🪄</span> <span id="sticks-txt">10</span></div>
+        <div class="res-item"><span class="res-icon">💎</span> <span>5</span></div>
     </div>
 
-    <!-- ЭКРАН 1: ЁЛОЧКА -->
-    <div id="tree-screen" class="screen active">
-        <div class="stats-box">
-            <div>Уровень ёлочки: <strong id="level-txt">1</strong></div>
-            <div class="progress-bar"><div id="progress" class="progress-fill"></div></div>
-            <div style="font-size: 12px; color: var(--tg-theme-hint-color); margin-top: 5px;" id="xp-txt">0 / 100 XP</div>
-        </div>
-        
-        <div id="tree-art" class="tree-container" onclick="waterTree()">🌱</div>
-        
-        <p style="font-size: 18px;">Запас воды: 💧 <strong id="water-txt">5</strong></p>
-        <button class="action-btn" onclick="waterTree()">ПОЛИТЬ ДЕРЕВО</button>
+    <!-- Поляна с Ёлкой -->
+    <div class="playfield">
+        <img id="main-tree" src="https://icons8.com" class="tree-img" onclick="upgradeTree()" alt="Ёлочка">
     </div>
 
-    <!-- ЭКРАН 2: ТОП ИГРОКОВ -->
-    <div id="top-screen" class="screen">
-        <h3>🏆 Лучшие Ёлководы</h3>
-        <div id="leaderboard-list">
-            <div class="list-item"><span>🥇 1. СнежныйКороль</span><span>Ур. 15</span></div>
-            <div class="list-item"><span>🥈 2. ДедМороз_99</span><span>Ур. 12</span></div>
-            <div class="list-item"><span>🥉 3. ТвойНик (Вы)</span><span>Ур. 1</span></div>
-        </div>
+    <!-- Управление -->
+    <div class="upgrade-section">
+        <div class="lvl-badge">Уровень Поляны: <span id="lvl-txt">1</span></div>
+        <button class="main-btn" onclick="upgradeTree()">Вулкан Магии (-2 🪄)</button>
+        <p style="font-size: 12px; color: #a9d6e5; margin-top: 5px;">Монеты капают автоматически: +1/сек</p>
     </div>
 
-    <!-- ЭКРАН 3: ДРУЗЬЯ -->
-    <div id="friends-screen" class="screen">
-        <h3>👥 Система друзей</h3>
-        <p style="font-size: 14px; color: var(--tg-theme-hint-color)">Ваш ID: <span id="my-id">Загрузка...</span></p>
-        
-        <div class="input-group">
-            <input type="number" id="friend-id-input" class="input-field" placeholder="Введите ID друга">
-            <button class="sm-btn" onclick="addFriend()">Добавить</button>
-        </div>
-
-        <div id="friends-list">
-            <p style="color: var(--tg-theme-hint-color)">Здесь будет список друзей...</p>
-        </div>
+    <!-- Меню -->
+    <div class="nav-menu">
+        <div class="nav-item active">🎄 Поляна</div>
+        <div class="nav-item" onclick="alert('Рейтинг будет доступен после запуска сервера!')">🏆 Топ-100</div>
+        <div class="nav-item" onclick="alert('Добавление друзей по ID будет на следующем шаге!')">👥 Друзья</div>
     </div>
 </div>
 
 <script>
-    // Инициализация Telegram WebApp
     const tg = window.Telegram.WebApp;
-    tg.expand(); // Разворачиваем приложение на весь экран
+    tg.expand();
 
-    // Показываем ID пользователя из Telegram
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        document.getElementById('my-id').innerText = tg.initDataUnsafe.user.id;
-    } else {
-        document.getElementById('my-id').innerText = "1234567"; // Тестовый ID для ПК
-    }
-
-    // Состояние игры (пока локальное)
-    let water = 5;
-    let xp = 0;
+    // Баланс игры
+    let coins = 0;
+    let sticks = 10;
     let level = 1;
-    const treeStages = { 1: "🌱", 2: "🌿", 3: "🌲", 4: "🎄", 5: "🌟🎄🌟" };
 
-    function switchScreen(screenId, btn) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
-        btn.classList.add('active');
-    }
+    // Ссылки на реальные картинки стадий роста (от ростка до украшенной ели)
+    const treeImages = {
+        1: "https://icons8.com", // Росток
+        2: "https://icons8.com", // Маленькая елочка
+        3: "https://icons8.com", // Большая елка
+        4: "https://icons8.com" // С гирляндами (ВК стиль!)
+    };
 
-    function waterTree() {
-        if (water <= 0) {
-            tg.showAlert("❌ Вода закончилась! Попросите друзей помочь.");
+    // Автоматический сбор монет (пассивный доход поляны)
+    setInterval(() => {
+        coins += level;
+        document.getElementById('coins-txt').innerText = coins;
+    }, 1000);
+
+    function upgradeTree() {
+        if (sticks < 2) {
+            tg.showAlert("🪄 Не хватает волшебных палочек! Зайдите позже или попросите у друзей.");
             return;
         }
-        water--;
-        xp += 25;
+        sticks -= 2;
+        level++;
 
-        if (xp >= 100) {
-            level++;
-            xp = 0;
-            tg.HapticFeedback.notificationOccurred('success'); // Вибрация при повышении уровня
-            document.getElementById('tree-art').innerText = treeStages[level] || "🌟🎄🌟";
-        } else {
-            tg.HapticFeedback.impactOccurred('light'); // Лёгкая вибрация при клике
-        }
+        tg.HapticFeedback.notificationOccurred('success'); // Вибрация
+        
+        // Меняем графику елки в зависимости от уровня
+        const treeElement = document.getElementById('main-tree');
+        if (level === 2) treeElement.src = treeImages[2];
+        else if (level === 4) treeElement.src = treeImages[3];
+        else if (level >= 6) treeElement.src = treeImages[4];
 
-        updateUI();
+        document.getElementById('sticks-txt').innerText = sticks;
+        document.getElementById('lvl-txt').innerText = level;
     }
 
-    function updateUI() {
-        document.getElementById('water-txt').innerText = water;
-        document.getElementById('level-txt').innerText = level;
-        document.getElementById('xp-txt').innerText = `${xp} / 100 XP`;
-        document.getElementById('progress').style.width = `${xp}%`;
+    // Генератор снега на экране
+    function createSnow() {
+        const flake = document.createElement('div');
+        flake.classList.add('snowflake');
+        flake.innerText = '❄';
+        flake.style.left = Math.random() * 100 + 'vw';
+        flake.style.animationDuration = Math.random() * 3 + 2 + 's';
+        flake.style.opacity = Math.random();
+        flake.style.fontSize = Math.random() * 10 + 10 + 'px';
+        document.body.appendChild(flake);
+        setTimeout(() => { flake.remove(); }, 5000);
     }
-
-    function addFriend() {
-        const id = document.getElementById('friend-id-input').value;
-        if(!id) return;
-        tg.showPopup({
-            title: 'Добавление в друзья',
-            message: `Вы хотите добавить пользователя с ID ${id}?`,
-            buttons: [{type: 'ok', text: 'Да'}]
-        });
-    }
-
-    updateUI();
+    setInterval(createSnow, 200);
 </script>
 </body>
 </html>
