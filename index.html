@@ -27,7 +27,7 @@
             width: 100%; max-width: 450px; z-index: 10;
             display: flex; flex-direction: column; align-items: center; padding: 15px; box-sizing: border-box;
         }
-        /* Экономическая панель как в ВК */
+        /* Экономическая панель ВК */
         .resources-panel {
             display: flex; justify-content: space-around; width: 100%;
             background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 20px;
@@ -39,17 +39,21 @@
         /* Игровая поляна */
         .playfield {
             position: relative; width: 100%; height: 320px; margin: 20px 0;
-            background: url('https://unsplash.com') center/cover;
+            background: #2c3e50 linear-gradient(to bottom, #34495e, #2c3e50);
             border-radius: 25px; border: 3px solid #415a77;
-            display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px;
+            display: flex; justify-content: center; align-items: center;
             box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            overflow: hidden;
         }
-        .tree-img {
-            width: 180px; height: auto; bottom: 20px; position: absolute;
-            transition: transform 0.1s ease-in-out; cursor: pointer;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.7));
+        /* Графика ёлочки на основе Emoji со спецэффектами */
+        .tree-display {
+            font-size: 140px;
+            cursor: pointer;
+            transition: transform 0.1s ease-in-out;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            display: flex; align-items: center; justify-content: center;
         }
-        .tree-img:active { transform: scale(1.08); }
+        .tree-display:active { transform: scale(1.15); }
 
         /* Кнопки улучшения */
         .upgrade-section { width: 100%; text-align: center; }
@@ -79,7 +83,7 @@
 
     <!-- Поляна с Ёлкой -->
     <div class="playfield">
-        <img id="main-tree" src="https://icons8.com" class="tree-img" onclick="upgradeTree()" alt="Ёлочка">
+        <div id="main-tree" class="tree-display" onclick="upgradeTree()">🌱</div>
     </div>
 
     <!-- Управление -->
@@ -99,20 +103,21 @@
 
 <script>
     const tg = window.Telegram.WebApp;
-    tg.expand();
+    if (tg) tg.expand();
 
     // Баланс игры
     let coins = 0;
     let sticks = 10;
     let level = 1;
 
-    // Ссылки на реальные картинки стадий роста (от ростка до украшенной ели)
-    const treeImages = {
-        1: "https://icons8.com", // Росток
-        2: "https://icons8.com", // Маленькая елочка
-        3: "https://icons8.com", // Большая елка
-        4: "https://icons8.com" // С гирляндами (ВК стиль!)
-    };
+    // Стадии роста в зависимости от уровня
+    function getTreeEmoji(lvl) {
+        if (lvl <= 2) return "🌱";      // Начальный росток
+        if (lvl <= 4) return "🌿";      // Кустик
+        if (lvl <= 6) return "🌲";      // Молодая ель
+        if (lvl <= 8) return "🎄";      // Нарядная ёлочка
+        return "🌟🎄🌟";                // Легендарный уровень!
+    }
 
     // Автоматический сбор монет (пассивный доход поляны)
     setInterval(() => {
@@ -122,20 +127,22 @@
 
     function upgradeTree() {
         if (sticks < 2) {
-            tg.showAlert("🪄 Не хватает волшебных палочек! Зайдите позже или попросите у друзей.");
+            if (tg && tg.showAlert) {
+                tg.showAlert("🪄 Не хватает волшебных палочек!");
+            } else {
+                alert("🪄 Не хватает волшебных палочек!");
+            }
             return;
         }
         sticks -= 2;
         level++;
 
-        tg.HapticFeedback.notificationOccurred('success'); // Вибрация
+        if (tg && tg.HapticFeedback) {
+            tg.HapticFeedback.notificationOccurred('success'); // Вибрация на телефоне
+        }
         
-        // Меняем графику елки в зависимости от уровня
-        const treeElement = document.getElementById('main-tree');
-        if (level === 2) treeElement.src = treeImages[2];
-        else if (level === 4) treeElement.src = treeImages[3];
-        else if (level >= 6) treeElement.src = treeImages[4];
-
+        // Обновляем графику и тексты
+        document.getElementById('main-tree').innerText = getTreeEmoji(level);
         document.getElementById('sticks-txt').innerText = sticks;
         document.getElementById('lvl-txt').innerText = level;
     }
