@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ёлочка: Telegram Mini App</title>
+    <!-- Подключаем официальный скрипт Telegram -->
+    <script src="https://telegram.org"></script>
+    <style>
+        :root {
+            --tg-theme-bg-color: #17212b;
+            --tg-theme-text-color: #f5f5f5;
+            --tg-theme-button-color: #2481cc;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-hint-color: #708499;
+        }
+        body {
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+        .container {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* Вкладки сверху */
+        .tabs {
+            display: flex;
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--tg-theme-hint-color);
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--tg-theme-text-color);
+            border-bottom: 3px solid var(--tg-theme-button-color);
+        }
+        .screen { display: none; width: 100%; text-align: center; }
+        .screen.active { display: block; }
+
+        /* Экран Ёлки */
+        .tree-container {
+            font-size: 120px;
+            margin: 30px 0;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .tree-container:active { transform: scale(1.1); }
+        .stats-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 15px;
+            width: 90%;
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            background: #2c3e50;
+            height: 14px;
+            width: 100%;
+            border-radius: 7px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill {
+            background: #2ecc71;
+            width: 0%;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .action-btn {
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            width: 80%;
+        }
+        
+        /* Стили для Топа и Друзей */
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.05);
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .input-field {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+            color: white;
+            font-size: 16px;
+        }
+        .sm-btn {
+            background: var(--tg-theme-button-color);
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Навигация -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchScreen('tree-screen', this)">🎄 Ёлка</button>
+        <button class="tab-btn" onclick="switchScreen('top-screen', this)">🏆 Топ-100</button>
+        <button class="tab-btn" onclick="switchScreen('friends-screen', this)">👥 Друзья</button>
+    </div>
+
+    <!-- ЭКРАН 1: ЁЛОЧКА -->
+    <div id="tree-screen" class="screen active">
+        <div class="stats-box">
+            <div>Уровень ёлочки: <strong id="level-txt">1</strong></div>
+            <div class="progress-bar"><div id="progress" class="progress-fill"></div></div>
+            <div style="font-size: 12px; color: var(--tg-theme-hint-color); margin-top: 5px;" id="xp-txt">0 / 100 XP</div>
+        </div>
+        
+        <div id="tree-art" class="tree-container" onclick="waterTree()">🌱</div>
+        
+        <p style="font-size: 18px;">Запас воды: 💧 <strong id="water-txt">5</strong></p>
+        <button class="action-btn" onclick="waterTree()">ПОЛИТЬ ДЕРЕВО</button>
+    </div>
+
+    <!-- ЭКРАН 2: ТОП ИГРОКОВ -->
+    <div id="top-screen" class="screen">
+        <h3>🏆 Лучшие Ёлководы</h3>
+        <div id="leaderboard-list">
+            <div class="list-item"><span>🥇 1. СнежныйКороль</span><span>Ур. 15</span></div>
+            <div class="list-item"><span>🥈 2. ДедМороз_99</span><span>Ур. 12</span></div>
+            <div class="list-item"><span>🥉 3. ТвойНик (Вы)</span><span>Ур. 1</span></div>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 3: ДРУЗЬЯ -->
+    <div id="friends-screen" class="screen">
+        <h3>👥 Система друзей</h3>
+        <p style="font-size: 14px; color: var(--tg-theme-hint-color)">Ваш ID: <span id="my-id">Загрузка...</span></p>
+        
+        <div class="input-group">
+            <input type="number" id="friend-id-input" class="input-field" placeholder="Введите ID друга">
+            <button class="sm-btn" onclick="addFriend()">Добавить</button>
+        </div>
+
+        <div id="friends-list">
+            <p style="color: var(--tg-theme-hint-color)">Здесь будет список друзей...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Инициализация Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    tg.expand(); // Разворачиваем приложение на весь экран
+
+    // Показываем ID пользователя из Telegram
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        document.getElementById('my-id').innerText = tg.initDataUnsafe.user.id;
+    } else {
+        document.getElementById('my-id').innerText = "1234567"; // Тестовый ID для ПК
+    }
+
+    // Состояние игры (пока локальное)
+    let water = 5;
+    let xp = 0;
+    let level = 1;
+    const treeStages = { 1: "🌱", 2: "🌿", 3: "🌲", 4: "🎄", 5: "🌟🎄🌟" };
+
+    function switchScreen(screenId, btn) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function waterTree() {
+        if (water <= 0) {
+            tg.showAlert("❌ Вода закончилась! Попросите друзей помочь.");
+            return;
+        }
+        water--;
+        xp += 25;
+
+        if (xp >= 100) {
+            level++;
+            xp = 0;
+            tg.HapticFeedback.notificationOccurred('success'); // Вибрация при повышении уровня
+            document.getElementById('tree-art').innerText = treeStages[level] || "🌟🎄🌟";
+        } else {
+            tg.HapticFeedback.impactOccurred('light'); // Лёгкая вибрация при клике
+        }
+
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('water-txt').innerText = water;
+        document.getElementById('level-txt').innerText = level;
+        document.getElementById('xp-txt').innerText = `${xp} / 100 XP`;
+        document.getElementById('progress').style.width = `${xp}%`;
+    }
+
+    function addFriend() {
+        const id = document.getElementById('friend-id-input').value;
+        if(!id) return;
+        tg.showPopup({
+            title: 'Добавление в друзья',
+            message: `Вы хотите добавить пользователя с ID ${id}?`,
+            buttons: [{type: 'ok', text: 'Да'}]
+        });
+    }
+
+    updateUI();
+</script>
+</body>
+</html>
