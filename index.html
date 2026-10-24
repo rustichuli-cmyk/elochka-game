@@ -4,142 +4,165 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ёлочка: Зимняя Поляна</title>
+    <!-- Официальный скрипт интеграции с Telegram -->
     <script src="https://telegram.org"></script>
     <style>
         body {
             margin: 0; padding: 0;
             background: #0d1b2a linear-gradient(to bottom, #0d1b2a, #1b263b);
             color: #ffffff;
-            font-family: 'Arial', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Arial', sans-serif;
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh; overflow: hidden; user-select: none;
         }
-        /* Падающий снег */
+        /* Анимированный снегопад */
         .snowflake {
             position: absolute; top: -10px; color: #fff; font-size: 1em;
             pointer-events: none; animation: fall linear infinite; z-index: 1;
         }
         @keyframes fall {
-            to { transform: translateY(105vh) translateX(20px); }
+            to { transform: translateY(105vh) translateX(30px); }
         }
         
         .game-container {
             width: 100%; max-width: 450px; z-index: 10;
             display: flex; flex-direction: column; align-items: center; padding: 15px; box-sizing: border-box;
+            height: 100vh; justify-content: space-between;
         }
-        /* Панель ресурсов */
+        /* Игровая панель ресурсов в стиле ВК */
         .resources-panel {
             display: flex; justify-content: space-around; width: 100%;
-            background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 20px;
-            backdrop-filter: blur(5px); box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5); padding: 12px; border-radius: 20px;
+            backdrop-filter: blur(8px); box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-top: 10px; box-sizing: border-box;
         }
         .res-item { display: flex; align-items: center; font-weight: bold; font-size: 16px; }
-        .res-icon { font-size: 20px; margin-right: 5px; }
+        .res-icon { font-size: 20px; margin-right: 6px; }
 
-        /* Поляна */
+        /* Зимняя поляна */
         .playfield {
-            position: relative; width: 100%; height: 320px; margin: 20px 0;
-            background: #2c3e50 linear-gradient(to bottom, #34495e, #2c3e50);
+            position: relative; width: 100%; height: 50vh; max-height: 350px;
+            background: #2c3e50 linear-gradient(to bottom, #34495e, #1a252f);
             border-radius: 25px; border: 3px solid #415a77;
             display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
-            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6); overflow: hidden;
         }
-        /* Ёлочка со спецэффектами */
+        /* Огромная ёлочка со спецэффектами */
         .tree-display {
-            font-size: 140px;
-            cursor: pointer;
+            font-size: 150px; cursor: pointer;
             transition: transform 0.1s ease-in-out;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            filter: drop-shadow(0 10px 25px rgba(0,0,0,0.6));
             display: flex; align-items: center; justify-content: center;
         }
-        .tree-display:active { transform: scale(1.15); }
+        .tree-display:active { transform: scale(1.12); }
 
-        /* Кнопки */
+        /* Панель улучшения */
         .upgrade-section { width: 100%; text-align: center; }
-        .lvl-badge { background: #e63946; padding: 5px 15px; border-radius: 15px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+        .lvl-badge { background: #e63946; padding: 6px 18px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 12px; font-size: 14px; box-shadow: 0 3px 10px rgba(230,57,70,0.3); }
         .main-btn {
-            background: #2a9d8f; color: white; border: none; width: 85%;
-            padding: 15px; font-size: 18px; font-weight: bold; border-radius: 30px;
+            background: #2a9d8f; color: white; border: none; width: 90%;
+            padding: 16px; font-size: 18px; font-weight: bold; border-radius: 30px;
             cursor: pointer; box-shadow: 0 5px 15px rgba(42, 157, 143, 0.4); transition: 0.2s;
         }
-        .main-btn:hover { background: #264653; }
+        .main-btn:active { background: #1d7066; transform: scale(0.98); }
         
-        /* Меню ВК */
-        .nav-menu { display: flex; width: 100%; background: rgba(255,255,255,0.1); border-radius: 15px; margin-top: auto; margin-bottom: 10px; }
-        .nav-item { flex: 1; text-align: center; padding: 12px; font-size: 14px; font-weight: bold; cursor: pointer; color: #ccc; }
-        .nav-item.active { color: #fff; background: rgba(255,255,255,0.15); border-radius: 15px; }
+        /* Нижнее навигационное меню ВК */
+        .nav-menu { display: flex; width: 100%; background: rgba(255,255,255,0.08); border-radius: 18px; margin-bottom: 15px; box-shadow: 0 -4px 15px rgba(0,0,0,0.2); }
+        .nav-item { flex: 1; text-align: center; padding: 14px; font-size: 14px; font-weight: bold; cursor: pointer; color: #b0c4de; transition: 0.2s; }
+        .nav-item.active { color: #ffffff; background: rgba(255,255,255,0.12); border-radius: 18px; border-bottom: 3px solid #2481cc; }
     </style>
 </head>
 <body>
 
 <div class="game-container">
+    <!-- Ресурсы -->
     <div class="resources-panel">
         <div class="res-item"><span class="res-icon">🪙</span> <span id="coins-txt">0</span></div>
-        <div class="res-item"><span class="res-icon">🪄</span> <span id="sticks-txt">20</span></div>
+        <div class="res-item"><span class="res-icon">🪄</span> <span id="sticks-txt">50</span></div>
         <div class="res-item"><span class="res-icon">💎</span> <span>5</span></div>
     </div>
 
+    <!-- Поляна -->
     <div class="playfield">
         <div id="main-tree" class="tree-display" onclick="upgradeTree()">🪵</div>
     </div>
 
+    <!-- Кнопка прокачки -->
     <div class="upgrade-section">
         <div class="lvl-badge">Уровень Ёлки: <span id="lvl-txt">1</span></div>
         <button class="main-btn" onclick="upgradeTree()">Вулкан Магии (-2 🪄)</button>
-        <p style="font-size: 12px; color: #a9d6e5; margin-top: 5px;">Монеты капают автоматически: +1/сек</p>
+        <p style="font-size: 12px; color: #a9d6e5; margin-top: 6px; margin-bottom: 0;">Автодоход поляны: +1 🪙 / сек</p>
     </div>
 
+    <!-- Нижнее меню -->
     <div class="nav-menu">
         <div class="nav-item active">🎄 Поляна</div>
-        <div class="nav-item" onclick="alert('Рейтинг будет доступен после запуска сервера!')">🏆 Топ-100</div>
-        <div class="nav-item" onclick="alert('Добавление друзей по ID будет на следующем шаге!')">👥 Друзья</div>
+        <div class="nav-item" onclick="tg.showAlert('🏆 Рейтинг Топ-100 и база данных будут активны после подключения сервера!')">🏆 Топ-100</div>
+        <div class="nav-item" onclick="tg.showAlert('👥 Меню добавления друзей по ID откроется на этапе запуска сервера!')">👥 Друзья</div>
     </div>
 </div>
 
 <script>
+    // Инициализация Telegram Mini App API
     const tg = window.Telegram.WebApp;
-    if (tg) tg.expand();
+    if (tg) {
+        tg.expand();
+        tg.ready();
+    }
 
+    // Игровой баланс
     let coins = 0;
-    let sticks = 20; // Увеличил запас палочек на старте для тестов
+    let sticks = 50; // Даем 50 палочек для тестов, чтобы можно было много раз кликнуть
     let level = 1;
 
-    // Четкие пошаговые стадии роста для каждого клика
+    // Стадии эволюции нашей ёлочки
     const treeStages = {
-        1: "🪵", // Просто пустой горшок / земля
-        2: "🌱", // Маленький росток
-        3: "🌿", // Большой кустик
-        4: "🌲", // Дикая ёлочка
-        5: "🎄", // Наряженное новогоднее дерево
-        6: "🎁🎄", // Ёлка с подарками под ней
-        7: "🌟🎄🎁" // Легендарная супер-ёлка со звездой!
+        1: "🪵", // Земля / пустая кадка
+        2: "🌱", // Маленький проклюнувшийся росток
+        3: "🌿", // Пышный кустик
+        4: "🌲", // Молодая лесная ель
+        5: "🎄", // Украшенное новогоднее дерево
+        6: "🎁🎄", // Ёлочка со светящимися подарками
+        7: "🌟🎄🎁" // Легендарное дерево со звездой!
     };
 
+    // Пассивный сбор монет (работает автоматически каждую секунду)
     setInterval(() => {
         coins += level;
         document.getElementById('coins-txt').innerText = coins;
     }, 1000);
 
+    // Функция улучшения ёлочки
     function upgradeTree() {
         if (sticks < 2) {
-            if (tg && tg.showAlert) tg.showAlert("🪄 Палочки закончились!");
-            else alert("🪄 Палочки закончились!");
+            if (tg && tg.showAlert) tg.showAlert("🪄 Волшебные палочки закончились! Зайдите позже.");
+            else alert("🪄 Волшебные палочки закончились!");
             return;
         }
+
         sticks -= 2;
         level++;
 
-        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        // Тактильный отклик (вибрация телефона) при клике в Telegram
+        if (tg && tg.HapticFeedback) {
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        // Обновляем эмодзи в зависимости от уровня. Если уровень > 7, остается финальная стадия
+        const nextEmoji = treeStages[level] || "🌟🎄🎁";
         
-        // Меняем смайлик. Если уровень больше 7, оставляем финальную стадию
-        const currentEmoji = treeStages[level] || "🌟🎄🎁";
-        
-        document.getElementById('main-tree').innerText = currentEmoji;
+        // Меняем данные на экране
+        document.getElementById('main-tree').innerText = nextEmoji;
         document.getElementById('sticks-txt').innerText = sticks;
         document.getElementById('lvl-txt').innerText = level;
+
+        // Если дошли до максимальной стадии — выводим красивое поздравление
+        if (level === 7 && tg && tg.showAlert) {
+            tg.showAlert("🎉 Поздравляем! Вы вырастили максимальную Новогоднюю Ёлочку! 🌟");
+        }
     }
 
+    // Алгоритм генерации красивого падающего снега
     function createSnow() {
         const flake = document.createElement('div');
         flake.classList.add('snowflake');
@@ -147,11 +170,13 @@
         flake.style.left = Math.random() * 100 + 'vw';
         flake.style.animationDuration = Math.random() * 3 + 2 + 's';
         flake.style.opacity = Math.random();
-        flake.style.fontSize = Math.random() * 10 + 10 + 'px';
+        flake.style.fontSize = Math.random() * 12 + 10 + 'px';
         document.body.appendChild(flake);
+        
+        // Удаляем снежинку после падения, чтобы не перегружать память устройства
         setTimeout(() => { flake.remove(); }, 5000);
     }
-    setInterval(createSnow, 200);
+    setInterval(createSnow, 180);
 </script>
 </body>
 </html>
